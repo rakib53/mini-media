@@ -1,31 +1,39 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Toaster } from "react-hot-toast";
-import { sendNotification } from "../api/auth";
+import {
+  fetchFriendRequest,
+  getAllUsers,
+  sendFriendRequestApi,
+  sendNotification,
+} from "../api/auth";
+import AddFriendButton from "../Components/AddFriendButton";
 import useAuth from "../hooks/useAuth";
-
-const userList = [
-  {
-    _id: "67ab6dce455acfd17163f39e",
-    name: "Rakib hossen",
-    email: "rakib@gmail.com",
-  },
-  {
-    _id: "67ac416ef90c28f0b7693fa4",
-    name: "Siam Ahmed",
-    email: "siam@gmail.com",
-  },
-];
+import { User } from "../utils/types";
 
 export default function Dashboard() {
   const { userId } = useAuth();
+  const queryClient = useQueryClient();
+
+  const { data: friendRequests } = useQuery({
+    queryKey: ["friendRequest"],
+    queryFn: () => fetchFriendRequest(userId),
+    enabled: !!userId,
+  });
+
+  const { data: allUsers } = useQuery({
+    queryKey: ["users", userId],
+    queryFn: () => getAllUsers(),
+    enabled: !!userId,
+  });
+
   // send notification mutation
   const mutation = useMutation({
     mutationFn: sendNotification,
   });
 
-  const sendNotificationToTheUser = (userInfo: any) => {
+  const sendNotificationToTheUser = (userInfo: User) => {
     const message = `Sending new notification to ${
-      userInfo?.name
+      userInfo?.username
     } at ${new Date().toLocaleTimeString()}`;
 
     const sendNotificationData = {
@@ -37,10 +45,55 @@ export default function Dashboard() {
     mutation.mutate(sendNotificationData, {
       onSuccess: (data) => {
         console.log("sendNotificationData", data);
-        // socket.emit("sendNotification", { userId: userInfo?._id, message });
       },
     });
   };
+
+  const sendFriendRequestMutation = useMutation({
+    mutationFn: sendFriendRequestApi,
+  });
+
+  const sendFriendRequest = (userInfo: User) => {
+    const data = {
+      sender: userId,
+      receiver: userInfo?._id,
+    };
+    sendFriendRequestMutation.mutate(data, {
+      onSuccess: async () => {
+        console.log("Mutation successful!");
+        queryClient.setQueryData(["friendRequest", userId], (oldData: any) => {
+          console.log("Inside setQueryData callback", "Old Data:", oldData);
+
+          if (!oldData) {
+            console.warn("Old data was undefined, initializing...");
+            return { incomingRequests: [], outgoingRequests: [] };
+          }
+
+          const newReceiver = {
+            _id: Date.now(),
+            status: "pending",
+            sender: userId,
+            receiver: {
+              _id: userInfo?._id,
+              username: userInfo?.username,
+              email: userInfo?.email,
+            },
+          };
+
+          return {
+            ...oldData,
+            outgoingRequests: [...oldData.outgoingRequests, newReceiver], // New array reference
+          };
+        });
+
+        // Force UI update by invalidating the query
+        queryClient.invalidateQueries(["friendRequest", userId]);
+      },
+    });
+  };
+
+  const userWithoutMySelf =
+    allUsers?.users?.filter((user: User) => user?._id !== userId) || [];
 
   return (
     <div className="p-8">
@@ -50,7 +103,7 @@ export default function Dashboard() {
       <h1 className="text-[25px] font-bold mb-10">User List</h1>
       <div className="flex items-center ">
         <div className="flex gap-3">
-          {userList?.map((user) => (
+          {userWithoutMySelf.map((user: User) => (
             <div
               key={user?._id}
               className="max-w-[200px] w-[200px] flex flex-col"
@@ -58,18 +111,17 @@ export default function Dashboard() {
               <div className="p-2">
                 <img
                   src=""
-                  alt={user?.name}
+                  alt={user?.username}
                   className="w-full h-[100px] rounded pb-2 border"
                 />
-                <span>{user?.name}</span>
+                <span>{user?.username}</span>
               </div>
               <div className="flex flex-col items-center gap-1">
-                <button
-                  onClick={() => sendNotificationToTheUser(user)}
-                  className="w-full py-1 px-2 rounded bg-[#1abc9c] hover:bg-green-500 duration-200 text-sm"
-                >
-                  Add friend
-                </button>
+                <AddFriendButton
+                  sendFriendRequest={sendFriendRequest}
+                  friendRequests={friendRequests}
+                  user={user}
+                />
                 <button
                   onClick={() => sendNotificationToTheUser(user)}
                   className="w-full py-1 px-2 rounded bg-[#615EF0] text-white hover:bg-[#4a48ca] duration-200  text-sm"

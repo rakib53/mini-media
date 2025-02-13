@@ -1,4 +1,6 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
+import toast from "react-hot-toast";
 import { Outlet } from "react-router-dom";
 import Navbar from "../Components/Navbar";
 import Sidebar from "../Components/Sidebar";
@@ -7,6 +9,7 @@ import socket from "../socket";
 
 function Layout() {
   const { userId } = useAuth();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (userId) {
@@ -17,6 +20,23 @@ function Layout() {
     return () => {
       socket.disconnect(); // ✅ Disconnect on logout
     };
+  }, [userId]);
+
+  useEffect(() => {
+    socket.on("friendRequestSent", (data) => {
+      const newNotification = {
+        message: data?.message,
+        senderId: data.sender._id,
+        receiverId: data.receiver,
+      };
+      toast.success(data?.message, {
+        position: "bottom-left",
+      });
+      // Update TanStack Query Cache with the new notification
+      queryClient.setQueryData(["notifications", userId], (oldData: any) => {
+        return [...(oldData || []), newNotification];
+      });
+    });
   }, [userId]);
 
   return (

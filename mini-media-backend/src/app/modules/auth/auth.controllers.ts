@@ -9,14 +9,15 @@ export const registerUser = async (
   req: Request,
   res: Response,
   next: NextFunction
-) => {
+): Promise<void> => {
   try {
     const { username, email, password } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: "User already exists" });
+      res.status(400).json({ message: "User already exists" });
+      return;
     }
 
     // Hash password
@@ -37,20 +38,22 @@ export const loginUser = async (
   req: Request,
   res: Response,
   next: NextFunction
-) => {
+): Promise<void> => {
   try {
     const { email, password } = req.body;
 
     // Check if user exists
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      res.status(400).json({ message: "Invalid credentials" });
+      return;
     }
 
     // Compare passwords
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      res.status(400).json({ message: "Invalid credentials" });
+      return;
     }
 
     // Generate JWT token
@@ -72,23 +75,28 @@ export const getUser = async (
   req: Request,
   res: Response,
   next: NextFunction
-) => {
+): Promise<void> => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
 
     if (!token) {
-      return res.status(400).json({ error: "Missing token!" });
+      res.status(400).json({ error: "Missing token!" });
+      return;
     }
 
     try {
       const decoded = jwt.verify(token, JWT_SECRET);
       if (typeof decoded === "string") {
-        return res.status(401).json({ error: "Invalid token" });
+        res.status(401).json({ error: "Invalid token" });
+        return;
       }
-      const user = await User.findOne({ _id: decoded?.id as string });
+      const user = await User.findOne({ _id: decoded?.id as string }).select(
+        "-password"
+      );
 
       if (!user) {
-        return res.status(404).json({ error: "User not found" });
+        res.status(404).json({ error: "User not found" });
+        return;
       }
 
       res.json(user);
@@ -98,5 +106,21 @@ export const getUser = async (
   } catch (error) {
     next(error);
     res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+export const getAllUsers = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const users = await User.find().select("-password");
+    res.status(200).json({
+      message: "Users retrieved successfully.",
+      users,
+    });
+  } catch (error) {
+    next(error);
   }
 };

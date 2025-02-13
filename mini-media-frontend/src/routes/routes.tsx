@@ -1,6 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
 import Layout from "../layout/Layout";
 import Dashboard from "../pages/Dashboard";
+import FriendRequests from "../pages/FriendRequests";
 import Login from "../pages/Login";
 import Messages from "../pages/Messages";
 import Registration from "../pages/Registration";
@@ -36,6 +37,14 @@ const router = createBrowserRouter([
         element: (
           <PrivateRoute>
             <Messages />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "/friend-requests",
+        element: (
+          <PrivateRoute>
+            <FriendRequests />
           </PrivateRoute>
         ),
       },

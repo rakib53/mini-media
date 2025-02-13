@@ -53,3 +53,43 @@ export const getUserNotifications = async (userId: string) => {
   });
   return response.data;
 };
+
+export const getAllUsers = async () => {
+  const token = localStorage.getItem("token");
+  const response = await axios.get(`${API_URL}/get-all-users`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return response.data;
+};
+
+export const sendFriendRequestApi = async ({
+  sender,
+  receiver,
+}: {
+  sender: string;
+  receiver: string;
+}) => {
+  const token = localStorage.getItem("token");
+  const response = await axios.post(
+    `${API_URL}/send-friend-request`,
+    { sender, receiver },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  return response.data;
+};
+
+export const fetchFriendRequest = async (userId: string) => {
+  const token = localStorage.getItem("token");
+  const response = await axios.get(`${API_URL}/friend-requests/${userId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return response.data;
+};

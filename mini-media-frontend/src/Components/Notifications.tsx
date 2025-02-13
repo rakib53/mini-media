@@ -17,7 +17,6 @@ export default function Notifications() {
   useEffect(() => {
     if (!userId) return;
     socket.on("receiveNotification", (newNotification) => {
-      console.log("newNotification", newNotification);
       toast.success(newNotification?.message, {
         position: "bottom-left",
       });
