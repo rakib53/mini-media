@@ -70,7 +70,6 @@ export default function ParticipantAndMessages({
     }
 
     const handleReceiveMessage = (data: any) => {
-      console.log("Receiving message from socket", data);
       setMessages((prev) => [...prev, data]);
     };
 

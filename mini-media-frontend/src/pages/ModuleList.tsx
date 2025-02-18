@@ -17,7 +17,6 @@ const ModulesList: React.FC<ModulesListProps> = ({ modules }) => {
 
   const handleDragEnd = async (result: any) => {
     if (!result.destination) {
-      console.warn("No destination found for drag");
       return;
     }
 
@@ -33,17 +32,12 @@ const ModulesList: React.FC<ModulesListProps> = ({ modules }) => {
 
     setModuleList(updatedList);
 
-    console.log("Reordered Modules:", updatedList);
-
     const reorderedIds = updatedList.map((module) => module._id);
-    console.log("Reordered IDs:", reorderedIds);
 
     try {
       // Uncomment this line when the backend endpoint is ready
       // await axios.put('/modules/reorder', { courseId, reorderedModules: reorderedIds });
-    } catch (error) {
-      console.error("Error reordering modules:", error);
-    }
+    } catch (error) {}
   };
 
   return (

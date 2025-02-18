@@ -39,9 +39,8 @@ function Layout() {
     });
 
     // Listen for online/offline updates
-    socket.on("onlineUsers", (data) => {
+    socket.on("onlineUsers", () => {
       // { userId, isOnline }
-      console.log("Online users", data);
       // queryClient.setQueryData(
       //   ["onlineUsers"],
       //   (prev: Record<string, boolean> = {}) => ({

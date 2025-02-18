@@ -4,6 +4,7 @@ import { User } from "../auth/auth.models";
 import Notification from "../notifications/notification.models";
 import { FriendRequest } from "./friendRequest.model";
 
+// send a friend request.
 export const sendFriendRequest = async (
   req: Request,
   res: Response
@@ -72,6 +73,7 @@ export const sendFriendRequest = async (
   }
 };
 
+// get all friend request for an user.
 export const getFriendRequests = async (
   req: Request,
   res: Response
@@ -113,6 +115,7 @@ export const getFriendRequests = async (
   }
 };
 
+// confirm a friend request
 export const makeFriend = async (
   req: Request,
   res: Response,
@@ -151,6 +154,7 @@ export const makeFriend = async (
   }
 };
 
+// Decline a friend request
 export const declineFriendRequest = async (
   req: Request,
   res: Response
@@ -196,5 +200,79 @@ export const declineFriendRequest = async (
   } catch (error) {
     console.error("Error declining friend request:", error);
     res.status(500).json({ message: "Internal server error." });
+  }
+};
+
+// Cancel outgoing friend request
+export const cancelOutgoingFriendRequest = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { senderId, receiverId } = req.body;
+
+    if (!senderId || !receiverId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing senderId or receiverId" });
+    }
+
+    await FriendRequest.findOneAndDelete({
+      sender: senderId,
+      receiver: receiverId,
+    });
+
+    res
+      .status(200)
+      .json({ success: true, message: "Friend request canceled successfully" });
+  } catch (error) {
+    console.error("Error canceling friend request:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+// Unfriend an user
+export const unfriendUser = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { userId, friendId } = req.body; // Get user IDs from request body
+
+    if (!userId || !friendId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid request" });
+    }
+
+    // Find both users
+    const user = await User.findById(userId);
+    const friend = await User.findById(friendId);
+
+    if (!user || !friend) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    // Remove friendId from user's friends list
+    user.friends = user.friends.filter((id) => id.toString() !== friendId);
+    await user.save();
+
+    // Remove userId from friend's friends list
+    friend.friends = friend.friends.filter((id) => id.toString() !== userId);
+    await friend.save();
+
+    // Optional: Emit a socket event to update frontend
+    io.to(friendId).emit("friendRemoved", userId);
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Friend removed successfully" });
+  } catch (error) {
+    console.error("Error unfriending user:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
   }
 };

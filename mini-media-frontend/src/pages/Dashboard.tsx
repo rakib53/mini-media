@@ -42,11 +42,7 @@ export default function Dashboard() {
       message: message,
     };
 
-    mutation.mutate(sendNotificationData, {
-      onSuccess: (data) => {
-        console.log("sendNotificationData", data);
-      },
-    });
+    mutation.mutate(sendNotificationData);
   };
 
   const sendFriendRequestMutation = useMutation({
@@ -61,10 +57,7 @@ export default function Dashboard() {
     sendFriendRequestMutation.mutate(data, {
       onSuccess: async () => {
         queryClient.setQueryData(["friendRequest", userId], (oldData: any) => {
-          console.log("Inside setQueryData callback", "Old Data:", oldData);
-
           if (!oldData) {
-            console.warn("Old data was undefined, initializing...");
             return { incomingRequests: [], outgoingRequests: [] };
           }
 

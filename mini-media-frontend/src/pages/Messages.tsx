@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import ClientImage from "../assets/client.jpg";
 import ParticipantAndMessages from "../Components/Messages/ParticipantAndMessages";
 import useAuth from "../hooks/useAuth";
 import { User } from "../utils/types";
@@ -95,11 +94,9 @@ export default function Messages() {
               >
                 <div className="flex items-center gap-3">
                   <div className="relative max-w-[60px] max-h-[60px] rounded-full">
-                    <img
-                      src={ClientImage}
-                      alt=""
-                      className="min-w-[60px] min-h-[60px] object-cover rounded-full"
-                    />
+                    <div className="w-[60px] h-[60px] font-Asap text-xl font-semibold flex justify-center items-center rounded-full bg-stone-300">
+                      {user?.username.charAt(0)}
+                    </div>
                     {onlineUsers[user?._id] && (
                       <span className="absolute bottom-0 right-0 w-3 h-3 z-20 bg-green-500 rounded-full"></span>
                     )}

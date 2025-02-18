@@ -1,15 +1,19 @@
-import Router from "express";
+import express from "express";
 import {
+  cancelOutgoingFriendRequest,
   declineFriendRequest,
   getFriendRequests,
   makeFriend,
   sendFriendRequest,
+  unfriendUser,
 } from "./friendRequest.controllers";
-const router = Router();
+const router = express.Router();
 
 router.get("/friend-requests/:userId", getFriendRequests);
 router.post("/send-friend-request", sendFriendRequest);
-router.post("/cancel-friend-request", declineFriendRequest);
+router.post("/decline-friend-request", declineFriendRequest);
+router.post("/cancel-friend-request", cancelOutgoingFriendRequest);
 router.post("/make-friend", makeFriend);
+router.post("/unfriend", unfriendUser);
 
 export const friendRequestRoutes = router;

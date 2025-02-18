@@ -93,7 +93,28 @@ export const sendFriendRequestApi = async ({
 };
 
 // cancel friend request api
-export const cancelFriendRequestApi = async ({
+export const declineFriendRequest = async ({
+  senderId,
+  receiverId,
+}: {
+  senderId: string;
+  receiverId: string;
+}) => {
+  const token = localStorage.getItem("token");
+  const response = await axios.post(
+    `${API_URL}/decline-friend-request`,
+    { senderId, receiverId },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  return response.data;
+};
+
+// cancel outgoing friend request
+export const cancelOutgoingFriendRequest = async ({
   senderId,
   receiverId,
 }: {
@@ -134,6 +155,27 @@ export const makeFriendApi = async ({
   return response.data;
 };
 
+// Unfriend an user
+export const unfriendAnUser = async ({
+  userId,
+  friendId,
+}: {
+  userId: string;
+  friendId: string;
+}) => {
+  const token = localStorage.getItem("token");
+  const response = await axios.post(
+    `${API_URL}/unfriend`,
+    { userId, friendId },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  return response.data;
+};
+
 // fetch friend requests api
 export const fetchFriendRequest = async (userId: string) => {
   const token = localStorage.getItem("token");
@@ -145,6 +187,7 @@ export const fetchFriendRequest = async (userId: string) => {
   return response.data;
 };
 
+// get all the messages for a participant
 export const getSingleConversationMessages = async ({
   userId,
   friendId,
