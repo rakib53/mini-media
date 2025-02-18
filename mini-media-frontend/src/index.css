@@ -11,70 +11,13 @@
   box-sizing: border-box;
 }
 
-.dark {
-  background-color: #070709;
+body {
+  overflow-x: hidden;
 }
 
-.ProseMirror {
-  position: relative;
-}
-
-.ProseMirror {
-  word-wrap: break-word;
-  white-space: pre-wrap;
-  white-space: break-spaces;
-  -webkit-font-variant-ligatures: none;
-  font-variant-ligatures: none;
-  font-feature-settings: "liga" 0; /* the above doesn't seem to work in Edge */
-}
-
-.ProseMirror {
-  z-index: 0;
-  margin-left: auto;
-  margin-right: auto;
-  max-width: 42rem;
-  padding: 4rem 2rem 4rem 5rem;
-  caret-color: #000;
-  outline-width: 0;
-}
-
-.ProseMirror.ProseMirror-focused > p.has-focus.is-block-empty:before {
-  content: "Type  /  to browse options";
-}
-
-.ProseMirror > .is-block-empty:before {
-  pointer-events: none;
-  float: left;
-  width: 100%;
-  height: 0;
-  color: hsla(0, 0%, 100%, 0.4);
-}
-
-:is(.dark .ProseMirror .is-block-empty):before {
-  content: "Click here to start typing...";
-  color: hsla(0, 0%, 100%, 0.4);
-}
-
-.ProseMirror
-  blockquote
-  .is-empty:not(.is-editor-empty):first-child:last-child:before {
-  content: "Enter a quote";
-}
-
-.ProseMirror blockquote + figcaption.is-empty:not(.is-editor-empty):before {
-  content: "Author";
-}
-
-.ProseMirror [data-placeholder][data-suggestion] :before,
-.ProseMirror [data-placeholder][data-suggestion]:before,
-.ProseMirror [data-type="details"].is-editor-empty:before {
-  content: none !important;
-}
-
-.ProseMirror [data-type="details"] summary.is-empty:before {
-  content: "Enter a summary";
-}
-
-.ProseMirror [data-type="detailsContent"] .is-empty:before {
-  content: "Enter details";
-}
+/* .blog-editor-interface {
+  display: flex;
+  flex: 0 1 100%;
+  flex-direction: column;
+  height: 100vh;
+} */

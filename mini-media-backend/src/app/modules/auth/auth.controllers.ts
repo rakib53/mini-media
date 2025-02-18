@@ -90,9 +90,9 @@ export const getUser = async (
         res.status(401).json({ error: "Invalid token" });
         return;
       }
-      const user = await User.findOne({ _id: decoded?.id as string }).select(
-        "-password"
-      );
+      const user = await User.findOne({ _id: decoded?.id as string })
+        .select("-password")
+        .populate("friends", "username");
 
       if (!user) {
         res.status(404).json({ error: "User not found" });

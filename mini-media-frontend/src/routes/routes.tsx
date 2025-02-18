@@ -5,6 +5,7 @@ import FriendRequests from "../pages/FriendRequests";
 import Login from "../pages/Login";
 import Messages from "../pages/Messages";
 import Registration from "../pages/Registration";
+import Settings from "../pages/Settings";
 import PrivateRoute from "./PrivateRoute";
 
 const router = createBrowserRouter([
@@ -45,6 +46,14 @@ const router = createBrowserRouter([
         element: (
           <PrivateRoute>
             <FriendRequests />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "/settings",
+        element: (
+          <PrivateRoute>
+            <Settings />
           </PrivateRoute>
         ),
       },

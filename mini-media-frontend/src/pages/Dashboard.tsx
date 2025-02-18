@@ -60,7 +60,6 @@ export default function Dashboard() {
     };
     sendFriendRequestMutation.mutate(data, {
       onSuccess: async () => {
-        console.log("Mutation successful!");
         queryClient.setQueryData(["friendRequest", userId], (oldData: any) => {
           console.log("Inside setQueryData callback", "Old Data:", oldData);
 
@@ -101,8 +100,8 @@ export default function Dashboard() {
 
       {/* user list  */}
       <h1 className="text-[25px] font-bold mb-10">User List</h1>
-      <div className="flex items-center ">
-        <div className="flex gap-3">
+      <div className="flex items-center">
+        <div className="grid sm:grid-cols-6 grid-cols-2 gap-5 gap-y-16">
           {userWithoutMySelf.map((user: User) => (
             <div
               key={user?._id}

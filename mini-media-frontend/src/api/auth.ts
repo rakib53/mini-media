@@ -6,8 +6,10 @@ export interface sendNotificationProps {
   message: string;
 }
 
+// base API URL
 const API_URL = "http://localhost:5000/api";
 
+// get register api
 export const registerUser = async (userData: {
   username: string;
   email: string;
@@ -17,6 +19,7 @@ export const registerUser = async (userData: {
   return response.data;
 };
 
+// login user api
 export const loginUser = async (userData: {
   email: string;
   password: string;
@@ -25,6 +28,7 @@ export const loginUser = async (userData: {
   return response.data;
 };
 
+// get user details api
 export const getUser = async (userData: { token: string }) => {
   const response = await axios.get(`${API_URL}/get-user`, {
     headers: {
@@ -34,6 +38,7 @@ export const getUser = async (userData: { token: string }) => {
   return response.data;
 };
 
+// send notification api
 export const sendNotification = async (
   sendNotification: sendNotificationProps
 ) => {
@@ -44,6 +49,7 @@ export const sendNotification = async (
   return response.data;
 };
 
+// fetch user notifications api
 export const getUserNotifications = async (userId: string) => {
   const token = localStorage.getItem("token");
   const response = await axios.get(`${API_URL}/get-notification/${userId}`, {
@@ -54,6 +60,7 @@ export const getUserNotifications = async (userId: string) => {
   return response.data;
 };
 
+// fetch all user api
 export const getAllUsers = async () => {
   const token = localStorage.getItem("token");
   const response = await axios.get(`${API_URL}/get-all-users`, {
@@ -64,6 +71,7 @@ export const getAllUsers = async () => {
   return response.data;
 };
 
+// send friend request api
 export const sendFriendRequestApi = async ({
   sender,
   receiver,
@@ -84,6 +92,49 @@ export const sendFriendRequestApi = async ({
   return response.data;
 };
 
+// cancel friend request api
+export const cancelFriendRequestApi = async ({
+  senderId,
+  receiverId,
+}: {
+  senderId: string;
+  receiverId: string;
+}) => {
+  const token = localStorage.getItem("token");
+  const response = await axios.post(
+    `${API_URL}/cancel-friend-request`,
+    { senderId, receiverId },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  return response.data;
+};
+
+// make friend api
+export const makeFriendApi = async ({
+  sender,
+  receiver,
+}: {
+  sender: string;
+  receiver: string;
+}) => {
+  const token = localStorage.getItem("token");
+  const response = await axios.post(
+    `${API_URL}/make-friend`,
+    { sender, receiver },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  return response.data;
+};
+
+// fetch friend requests api
 export const fetchFriendRequest = async (userId: string) => {
   const token = localStorage.getItem("token");
   const response = await axios.get(`${API_URL}/friend-requests/${userId}`, {
@@ -91,5 +142,24 @@ export const fetchFriendRequest = async (userId: string) => {
       Authorization: `Bearer ${token}`,
     },
   });
+  return response.data;
+};
+
+export const getSingleConversationMessages = async ({
+  userId,
+  friendId,
+}: {
+  userId: string;
+  friendId: string;
+}) => {
+  const token = localStorage.getItem("token");
+  const response = await axios.get(
+    `${API_URL}/get-messages/${userId}/${friendId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
   return response.data;
 };

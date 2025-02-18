@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { io, userList } from "../../../server";
 import { User } from "../auth/auth.models";
 import Notification from "../notifications/notification.models";
@@ -109,6 +109,92 @@ export const getFriendRequests = async (
     });
   } catch (error) {
     console.error("Error fetching friend requests:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+};
+
+export const makeFriend = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { sender, receiver } = req.body;
+
+    const senderUser = await User.findById(sender);
+    const receiverUser = await User.findById(receiver);
+
+    if (!receiverUser || !senderUser) {
+      res.status(404).json({ message: "User not found." });
+      return;
+    }
+
+    // Add each user to the other's friends list
+    await User.findByIdAndUpdate(receiver, {
+      $addToSet: { friends: sender }, // Prevents duplicates
+    });
+
+    await User.findByIdAndUpdate(sender, {
+      $addToSet: { friends: receiver }, // Mutual friendship
+    });
+
+    // Remove friend request after acceptance
+    await FriendRequest.findOneAndDelete({
+      sender: sender,
+      receiver: receiver,
+    });
+
+    res.status(200).json({ message: "Friend request accepted successfully." });
+    return;
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const declineFriendRequest = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { senderId, receiverId } = req.body;
+
+    // Check if the request exists
+    const friendRequest = await FriendRequest.findOne({
+      sender: senderId,
+      receiver: receiverId,
+      status: "pending",
+    });
+
+    if (!friendRequest) {
+      res.status(404).json({ message: "Friend request not found." });
+      return;
+    }
+
+    // Delete the friend request
+    await FriendRequest.findByIdAndDelete(friendRequest._id);
+
+    // Send a notification to the sender
+    const receiverInfo = await User.findById(receiverId);
+    const newNotification = new Notification({
+      senderId: receiverId,
+      receiverId: senderId,
+      message: `${receiverInfo?.username} declined your friend request.`,
+    });
+    await newNotification.save();
+
+    // Emit real-time event if sender is online
+    const socketId = userList[senderId];
+    if (socketId) {
+      io.to(socketId).emit("friendRequestDeclined", {
+        sender: receiverId,
+        receiver: senderId,
+        message: `${receiverInfo?.username} declined your friend request.`,
+      });
+    }
+
+    res.status(200).json({ message: "Friend request declined successfully." });
+  } catch (error) {
+    console.error("Error declining friend request:", error);
     res.status(500).json({ message: "Internal server error." });
   }
 };

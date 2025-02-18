@@ -37,7 +37,24 @@ function Layout() {
         return [...(oldData || []), newNotification];
       });
     });
-  }, [userId]);
+
+    // Listen for online/offline updates
+    socket.on("onlineUsers", (data) => {
+      // { userId, isOnline }
+      console.log("Online users", data);
+      // queryClient.setQueryData(
+      //   ["onlineUsers"],
+      //   (prev: Record<string, boolean> = {}) => ({
+      //     ...prev,
+      //     [userId]: isOnline,
+      //   })
+      // );
+    });
+
+    return () => {
+      socket.off("onlineUsers");
+    };
+  }, [userId, queryClient]);
 
   return (
     <div className="flex">
