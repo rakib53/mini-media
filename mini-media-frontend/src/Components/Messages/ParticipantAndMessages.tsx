@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
+import { MoreVertical, Phone, Send, Video } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getSingleConversationMessages } from "../../api/auth";
 import useAuth from "../../hooks/useAuth";
-import socket from "../../socket";
+import { useSocket } from "../../socket/SocketContext";
 import { User } from "../../utils/types";
 
 export default function ParticipantAndMessages({
@@ -11,6 +12,7 @@ export default function ParticipantAndMessages({
   participant: User;
 }) {
   const { userId } = useAuth();
+  const { socket, onlineUsers } = useSocket();
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<
     { _id: String; senderId: string; receiverId: string; content: string }[]
@@ -38,7 +40,6 @@ export default function ParticipantAndMessages({
   // send message to the current participant through socket.
   const handleSendMessage = () => {
     if (!message.trim()) return;
-
     try {
       const sendMessageData = {
         _id: Date.now().toString(),
@@ -48,7 +49,7 @@ export default function ParticipantAndMessages({
       };
 
       setMessages((prev) => [...prev, sendMessageData]);
-      socket.emit("sendMessage", sendMessageData);
+      socket?.emit("sendMessage", sendMessageData);
       setMessage("");
     } catch (error) {
       console.log("error", error);
@@ -73,10 +74,10 @@ export default function ParticipantAndMessages({
       setMessages((prev) => [...prev, data]);
     };
 
-    socket.on("receiveMessage", handleReceiveMessage);
+    socket?.on("receiveMessage", handleReceiveMessage);
 
     return () => {
-      socket.off("receiveMessage", handleReceiveMessage);
+      socket?.off("receiveMessage", handleReceiveMessage);
     };
   }, [participantMessages]);
 
@@ -103,90 +104,93 @@ export default function ParticipantAndMessages({
   }
 
   return (
-    <div className="w-2/4 border-r border-r-[#EBEBEB] relative max-h-screen">
-      {/* Participant details */}
-      <div className="flex justify-between items-center border-b border-b-[#EBEBEB] px-6 py-5">
-        <div className="flex gap-2 items-center">
-          <div className="w-[60px] h-[60px] overflow-hidden">
-            {/* <img
-              src={ClientImage}
-              alt=""
-              className="w-full h-full object-cover rounded-full"
-            /> */}
-            <div className="w-[60px] h-[60px] font-Asap text-xl font-semibold flex justify-center items-center rounded-full bg-stone-300">
-              {participant?.username.charAt(0)}
+    <main className="flex-1 flex">
+      {/* Chat Area */}
+      <div className="flex-1 flex flex-col border-r border-r-[#EBEBEB]">
+        {/* Participant details */}
+        <div className="flex gap-2 items-center justify-between p-4 border-b">
+          <div className="flex gap-2 items-center">
+            <div className="w-[60px] h-[60px] overflow-hidden">
+              <div className="w-[60px] h-[60px] font-Asap text-xl font-semibold flex justify-center items-center rounded-full bg-stone-300">
+                {participant?.username.charAt(0)}
+              </div>
+            </div>
+            <div>
+              <h3 className="font-Asap text-lg font-medium">
+                {participant?.username}
+              </h3>
+              <div className="flex items-center gap-1">
+                {!!onlineUsers[participant?._id] ? (
+                  <>
+                    <span className="block min-w-[10px] min-h-[10px] bg-green-500 rounded-full"></span>
+                    <span className="font-Inter text-sm">Online</span>
+                  </>
+                ) : (
+                  <>
+                    {" "}
+                    <span className="block min-w-[10px] min-h-[10px] bg-gray-500 rounded-full"></span>
+                    <span className="font-Inter text-sm">Inactive</span>
+                  </>
+                )}
+              </div>
             </div>
           </div>
           <div>
-            <h3 className="font-Asap text-lg font-medium">
-              {participant?.username}
-            </h3>
-            <div className="flex items-center gap-1">
-              <span className="block min-w-[8px] min-h-[8px] bg-green-500 rounded-full"></span>
-              <span className="font-Inter text-sm">Online</span>
+            <div className="flex items-center space-x-4">
+              <Phone className="w-5 h-5 text-gray-600 cursor-pointer hover:text-blue-500" />
+              <Video className="w-5 h-5 text-gray-600 cursor-pointer hover:text-blue-500" />
+              <MoreVertical className="w-5 h-5 text-gray-600 cursor-pointer" />
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          {/* calls icons  */}
-          <span>
-            <svg
-              stroke="currentColor"
-              fill="currentColor"
-              strokeWidth="0"
-              viewBox="0 0 512 512"
-              height="1.2em"
-              width="1.2em"
-              xmlns="http://www.w3.org/2000/svg"
+
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {messages?.map((message, index) => (
+            <div
+              key={index}
+              className={`flex ${
+                message?.senderId === userId ? "justify-end" : "justify-start"
+              }`}
             >
-              <path d="M426.666 330.667a250.385 250.385 0 0 1-75.729-11.729c-7.469-2.136-16-1.073-21.332 5.333l-46.939 46.928c-60.802-30.928-109.864-80-140.802-140.803l46.939-46.927c5.332-5.333 7.462-13.864 5.332-21.333-8.537-24.531-12.802-50.136-12.802-76.803C181.333 73.604 171.734 64 160 64H85.333C73.599 64 64 73.604 64 85.333 64 285.864 226.136 448 426.666 448c11.73 0 21.334-9.604 21.334-21.333V352c0-11.729-9.604-21.333-21.334-21.333z"></path>
-            </svg>
-          </span>
-          <span>
-            <svg
-              stroke="currentColor"
-              fill="currentColor"
-              strokeWidth="0"
-              viewBox="0 0 24 24"
-              height="1.2em"
-              width="1.2em"
-              xmlns="http://www.w3.org/2000/svg"
+              <span className="w-max bg-slate-200 px-3 py-1 text-base rounded-full">
+                {message?.content}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* Message Input */}
+        <div className="p-4 border-t bg-white">
+          <div className="flex items-center space-x-2">
+            <input
+              type="text"
+              value={message}
+              onChange={(e) => handleSetMessages(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Type your message..."
+              className="flex-1 rounded-full border border-gray-300 px-4 py-2 focus:outline-none focus:border-blue-500"
+            />
+            <button
+              type="submit"
+              onClick={handleSendMessage}
+              className="p-2 rounded-full bg-blue-500 text-white hover:bg-blue-600 focus:outline-none"
             >
-              <path fill="none" d="M0 0h24v24H0zm0 0h24v24H0z"></path>
-              <path d="m21 6.5-4 4V7c0-.55-.45-1-1-1H9.82L21 17.18V6.5zM3.27 2 2 3.27 4.73 6H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.21 0 .39-.08.54-.18L19.73 21 21 19.73 3.27 2z"></path>
-            </svg>
-          </span>
+              <Send className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Conversations */}
-      <div className="max-h-screen h-[calc(100vh-215px)] overflow-y-scroll flex flex-col gap-2 p-6">
-        {messages?.map((message, index) => (
-          <div
-            key={index}
-            className={`flex ${
-              message?.senderId === userId ? "justify-end" : "justify-start"
-            }`}
-          >
-            <span className="w-max bg-slate-200 px-3 py-1 text-base rounded-full">
-              {message?.content}
-            </span>
-          </div>
-        ))}
+      {/* other actions */}
+      <div className="w-1/4 p-6">
+        <div className="flex justify-between items-center">
+          <span>Make group</span>
+          <button className="py-1 px-3 bg-slate-500 rounded-md text-white ml-2">
+            Create
+          </button>
+        </div>
       </div>
-
-      {/* send message input  */}
-      <div className="absolute bottom-0 right-0 max-w-full w-full flex items-center gap-2 bg-slate-300 py-4 px-6">
-        <input
-          type="text"
-          placeholder="Type here..."
-          value={message}
-          onChange={(e) => handleSetMessages(e.target.value)}
-          onKeyDown={handleKeyDown}
-          className="w-full py-1 px-2 rounded-full"
-        />
-        <button onClick={handleSendMessage}>Send</button>
-      </div>
-    </div>
+    </main>
   );
 }

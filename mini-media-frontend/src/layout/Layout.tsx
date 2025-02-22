@@ -5,25 +5,15 @@ import { Outlet } from "react-router-dom";
 import Navbar from "../Components/Navbar";
 import Sidebar from "../Components/Sidebar";
 import useAuth from "../hooks/useAuth";
-import socket from "../socket";
+import { useSocket } from "../socket/SocketContext";
 
 function Layout() {
   const { userId } = useAuth();
   const queryClient = useQueryClient();
+  const { socket } = useSocket();
 
   useEffect(() => {
-    if (userId) {
-      socket.connect(); // ✅ Only connect after login
-      socket.emit("registerUser", userId);
-    }
-
-    return () => {
-      socket.disconnect(); // ✅ Disconnect on logout
-    };
-  }, [userId]);
-
-  useEffect(() => {
-    socket.on("friendRequestSent", (data) => {
+    socket?.on("friendRequestSent", (data) => {
       const newNotification = {
         message: data?.message,
         senderId: data.sender._id,
@@ -37,27 +27,11 @@ function Layout() {
         return [...(oldData || []), newNotification];
       });
     });
-
-    // Listen for online/offline updates
-    socket.on("onlineUsers", () => {
-      // { userId, isOnline }
-      // queryClient.setQueryData(
-      //   ["onlineUsers"],
-      //   (prev: Record<string, boolean> = {}) => ({
-      //     ...prev,
-      //     [userId]: isOnline,
-      //   })
-      // );
-    });
-
-    return () => {
-      socket.off("onlineUsers");
-    };
   }, [userId, queryClient]);
 
   return (
     <div className="flex">
-      <div className="w-[90px]">
+      <div className="h-screen">
         <Sidebar />
       </div>
 

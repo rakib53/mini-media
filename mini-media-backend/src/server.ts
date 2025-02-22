@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import { Server as SocketIOServer } from "socket.io";
 import app from "./app";
 import config from "./app/config";
+import { User } from "./app/modules/auth/auth.models";
 import { MessageModel } from "./app/modules/messages/messages.models";
 
 let server: Server;
@@ -41,12 +42,26 @@ const main = async () => {
     io.on("connection", (socket) => {
       // when a new users has connect register in memory
       socket.on("registerUser", async (userId: string) => {
-        console.log("🔹 Registering user:", userId);
+        console.log("🔹 Registering user:", userId, socket.id);
         userList[userId] = socket.id;
+        const userInfo = await User.findById(userId).select("friends").lean();
+        // Notify only the user's friends that they are online
+        if (userInfo && userInfo?.friends?.length > 0) {
+          let onlineFriends: string[] = [];
+          userInfo?.friends?.forEach((friendId) => {
+            const friendSocketId = userList[friendId.toString()];
+            if (friendSocketId) {
+              onlineFriends.push(friendId.toString());
+              io.to(userList[friendId.toString()]).emit("userOnline", userId);
+            }
+          });
+
+          // Send the list of currently online friends to the user
+          socket.emit("onlineFriends", onlineFriends);
+        }
       });
 
       socket.on("sendMessage", async (data) => {
-        console.log("first");
         const { senderId, receiverId, content } = data;
         const newMessage = new MessageModel({ senderId, receiverId, content });
         await newMessage.save();
@@ -60,11 +75,18 @@ const main = async () => {
 
       // when disconnect an user
       socket.on("disconnect", async () => {
+        let disconnectedUserId: string | null = null;
         Object.keys(userList).forEach((key) => {
           if (userList[key] === socket.id) {
+            disconnectedUserId = key;
             delete userList[key];
           }
         });
+        if (disconnectedUserId) {
+          // Notify all users that this user is offline
+          io.emit("userOffline", disconnectedUserId);
+          console.log(`❌ User ${disconnectedUserId} went offline.`);
+        }
       });
     });
 
@@ -79,31 +101,3 @@ const main = async () => {
 export { io, userList };
 
 main();
-
-// // Function to get only online friends
-// const getOnlineFriends = async (userId: string) => {
-//   const userFriends = await getUserFriendsFromDB(userId); // Fetch user's friends from DB
-//   return userFriends.filter((friendId: string | number) => userList[friendId]); // Filter only online friends
-// };
-
-// async function getUserFriendsFromDB(userId: string): Promise<string[]> {
-//   try {
-//     const user = await User.findById(userId).populate("friends");
-//     if (!user || !user.friends) {
-//       return [];
-//     }
-//     return user.friends.map((friend: any) => friend._id.toString());
-//   } catch (error) {
-//     console.error("Error fetching user friends from DB:", error);
-//     return [];
-//   }
-// }
-
-// if (userId) {
-//   delete userList[userId];
-//   console.log("❌ User disconnected:", socket.id);
-//   // Update DB to mark user as offline
-//   await User.findByIdAndUpdate(userId, { isOnline: false });
-//   // Notify friends that this user is offline
-//   // io.emit("onlineUsers", { userId, isOnline: false });
-// }

@@ -34,14 +34,6 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "/messages",
-        element: (
-          <PrivateRoute>
-            <Messages />
-          </PrivateRoute>
-        ),
-      },
-      {
         path: "/friend-requests",
         element: (
           <PrivateRoute>
@@ -58,6 +50,14 @@ const router = createBrowserRouter([
         ),
       },
     ],
+  },
+  {
+    path: "/messages",
+    element: (
+      <PrivateRoute>
+        <Messages />
+      </PrivateRoute>
+    ),
   },
 ]);
 

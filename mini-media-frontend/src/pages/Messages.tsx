@@ -1,20 +1,16 @@
-import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import ParticipantAndMessages from "../Components/Messages/ParticipantAndMessages";
+import Navbar from "../Components/Navbar";
 import useAuth from "../hooks/useAuth";
+import { useSocket } from "../socket/SocketContext";
 import { User } from "../utils/types";
 
 export default function Messages() {
   const { user } = useAuth();
+  const { onlineUsers } = useSocket();
   const [selectedParticipant, setSelectParticipant] = useState<User | null>(
     null
   );
-
-  const { data: onlineUsers } = useQuery<{ [key: string]: boolean }>({
-    queryKey: ["onlineUsers"],
-    queryFn: () => ({}), // Placeholder query, we only update via socket events
-    initialData: {},
-  });
 
   // select a participant
   const handleSelectParticipant = (user: User) => {
@@ -22,11 +18,12 @@ export default function Messages() {
   };
 
   return (
-    <div className="blog-editor-interface">
-      <div className="flex">
+    <div className="h-screen flex flex-col">
+      <Navbar />
+      <div className="flex flex-1 overflow-hidden">
         {/* Messages header and the conversations */}
-        <div className="w-1/4 min-h-full h-full border-r border-b-[#EBEBEB]">
-          <div className="flex justify-between items-center p-6 border-b border-b-[#EBEBEB]">
+        <div className="w-1/4 border-r border-b-[#EBEBEB]">
+          <div className="flex justify-between items-center p-[22px] border-b border-b-[#EBEBEB]">
             <div className="flex items-center gap-2.5">
               <div className="flex items-center gap-1.5">
                 <h3 className="font-Inter text-xl leading-[150%] font-semibold text-black">
@@ -52,10 +49,9 @@ export default function Messages() {
                 </span>
               </div>
               <span className="font-Inter text-[12px] font-semibold inline-block py-1 px-3 bg-[#EDF2F7] rounded-full">
-                12
+                {user?.friends?.length}
               </span>
             </div>
-
             <div>
               <button className="bg-primary outline-none rounded-full p-3">
                 <svg
@@ -84,7 +80,7 @@ export default function Messages() {
             />
           </div>
 
-          {/* all conversations  */}
+          {/* all participants  */}
           <div className="flex flex-col gap-2 p-3">
             {user?.friends?.map((user: User) => (
               <div
@@ -97,7 +93,8 @@ export default function Messages() {
                     <div className="w-[60px] h-[60px] font-Asap text-xl font-semibold flex justify-center items-center rounded-full bg-stone-300">
                       {user?.username.charAt(0)}
                     </div>
-                    {onlineUsers[user?._id] && (
+
+                    {!!onlineUsers[user?._id] && (
                       <span className="absolute bottom-0 right-0 w-3 h-3 z-20 bg-green-500 rounded-full"></span>
                     )}
                   </div>
@@ -119,7 +116,7 @@ export default function Messages() {
           </div>
         </div>
 
-        {/* Participant details and conversation */}
+        {/* Participant details and conversations */}
         {selectedParticipant ? (
           <ParticipantAndMessages participant={selectedParticipant} />
         ) : (
@@ -129,31 +126,6 @@ export default function Messages() {
             </div>
           </div>
         )}
-
-        {/* Participant and conversation information */}
-        <div className="w-1/4 p-6">
-          {/* Participant details */}
-          <div className="flex justify-between items-center">
-            <div>
-              <span>Directory</span>
-            </div>
-            <div>
-              <span>
-                <svg
-                  stroke="currentColor"
-                  fill="currentColor"
-                  strokeWidth="0"
-                  viewBox="0 0 512 512"
-                  height="1.2em"
-                  width="1.2em"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path d="M426.666 330.667a250.385 250.385 0 0 1-75.729-11.729c-7.469-2.136-16-1.073-21.332 5.333l-46.939 46.928c-60.802-30.928-109.864-80-140.802-140.803l46.939-46.927c5.332-5.333 7.462-13.864 5.332-21.333-8.537-24.531-12.802-50.136-12.802-76.803C181.333 73.604 171.734 64 160 64H85.333C73.599 64 64 73.604 64 85.333 64 285.864 226.136 448 426.666 448c11.73 0 21.334-9.604 21.334-21.333V352c0-11.729-9.604-21.333-21.334-21.333z"></path>
-                </svg>
-              </span>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

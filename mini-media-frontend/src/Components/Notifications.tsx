@@ -3,10 +3,11 @@ import { useEffect } from "react";
 import toast from "react-hot-toast";
 import { getUserNotifications } from "../api/auth";
 import useAuth from "../hooks/useAuth";
-import socket from "../socket";
+import { useSocket } from "../socket/SocketContext";
 
 export default function Notifications() {
   const { userId } = useAuth();
+  const { socket } = useSocket();
   const queryClient = useQueryClient();
   const { data: userNotifications } = useQuery({
     queryKey: ["notifications", userId],
@@ -16,7 +17,7 @@ export default function Notifications() {
 
   useEffect(() => {
     if (!userId) return;
-    socket.on("receiveNotification", (newNotification) => {
+    socket?.on("receiveNotification", (newNotification) => {
       toast.success(newNotification?.message, {
         position: "bottom-left",
       });
@@ -27,7 +28,7 @@ export default function Notifications() {
     });
 
     return () => {
-      socket.off("receiveNotification");
+      socket?.off("receiveNotification");
     };
   }, [userId]);
 

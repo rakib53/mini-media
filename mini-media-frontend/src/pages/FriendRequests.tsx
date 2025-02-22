@@ -189,7 +189,7 @@ export default function FriendRequests() {
       {/* My Friends  */}
       {user?.friends?.length > 0 && (
         <>
-          <h1 className="text-[25px] font-bold mb-5 mt-10">Friends</h1>
+          <h1 className="text-[25px] font-bold mb-5 mt-5">Friends</h1>
           <div className="flex items-center ">
             <div className="max-w-[500px] w-full">
               {user?.friends?.map((user: any) => (
