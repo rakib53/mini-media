@@ -1,11 +1,11 @@
 {
-  "name": "chat-app-backend",
+  "name": "mini-media-backend",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
     "build": "tsc",
     "start:dev": "npx ts-node-dev --respawn --transpile-only src/server.ts",
-    "start:prod": "node src/dist/server.js",
+    "start:prod": "node ./dist/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

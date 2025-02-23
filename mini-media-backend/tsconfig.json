@@ -1,6 +1,6 @@
 {
   "include": ["src"], // which files to compile
-  "exclude": ["node_modules", "dist"], // which files to skip
+  "exclude": ["node_modules"], // which files to skip
   "compilerOptions": {
     /* Visit https://aka.ms/tsconfig to read more about this file */
 
@@ -13,7 +13,7 @@
     // "disableReferencedProjectLoad": true,             /* Reduce the number of projects loaded automatically by TypeScript. */
 
     /* Language and Environment */
-    "target": "ES2021" /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */,
+    "target": "ES6" /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */,
     "lib": [
       "ES2021",
       "DOM"
