@@ -9,7 +9,7 @@ const notFound: RequestHandler = (req, res, next): void => {
     message: "APT not found!",
     error: {
       code: httpStatus.NOT_FOUND,
-      message: httpStatus["404_MESSAGE"],
+      message: "Resource not found",
     },
   });
   return;
