@@ -20,8 +20,8 @@ app.use(
 
 app.use("/api/", router);
 
-app.get("/", (req, res) => {
-  res.send("Hello this server has been connected.");
+app.get("/", (_req: express.Request, res: express.Response) => {
+  res.send("Hello, this server has been connected.");
 });
 
 app.use(globalErrorHandler);
