@@ -79,7 +79,7 @@ export default function Dashboard() {
         });
 
         // Force UI update by invalidating the query
-        queryClient.invalidateQueries(["friendRequest", userId]);
+        queryClient.invalidateQueries({ queryKey: ["friendRequest", userId] });
       },
     });
   };
