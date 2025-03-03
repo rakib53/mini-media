@@ -1,4 +1,11 @@
-import { Bell, MessageCircle, UserRound } from "lucide-react";
+import {
+  Bell,
+  House,
+  MessageCircle,
+  MessageSquare,
+  UserRound,
+  Users,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { NavLink } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
@@ -8,6 +15,7 @@ export default function Navbar() {
   const { user } = useAuth();
   const [isShowNotification, setIsShowNotification] = useState(false);
   const showNotificationRef = useRef<HTMLDivElement | null>(null);
+  const isMessageTab = window.location.pathname === "/messages";
 
   // checking if the user click outside of the time popup will disappear
   useEffect(() => {
@@ -26,10 +34,44 @@ export default function Navbar() {
   }, [setIsShowNotification]);
 
   return (
-    <div className="h-[60px] bg-white border-b flex items-center justify-between px-4 shadow-sm">
+    <div className="h-[60px] bg-white border-b flex items-center justify-between py-6 px-4 shadow-sm">
       <h2 className="text-black font-Asap text-base font-semibold">
         Welcome back, {user?.username}
       </h2>
+      {isMessageTab && (
+        <div className="flex items-center gap-2">
+          <NavLink
+            to="/"
+            className={`p-3 rounded-xl ${
+              window.location.pathname === "/"
+                ? "bg-blue-100 text-blue-600"
+                : "hover:bg-gray-200"
+            } `}
+          >
+            <House className="w-5 h-5" />
+          </NavLink>
+          <NavLink
+            to="/messages"
+            className={`p-3 rounded-xl ${
+              window.location.pathname === "/messages"
+                ? "bg-blue-100 text-blue-600"
+                : "hover:bg-gray-200"
+            } `}
+          >
+            <MessageSquare className="w-5 h-5" />
+          </NavLink>
+          <NavLink
+            to="/friend-requests"
+            className={`p-3 rounded-xl ${
+              window.location.pathname === "/friend-requests"
+                ? "bg-blue-100 text-blue-600"
+                : "hover:bg-gray-200"
+            } `}
+          >
+            <Users className="w-5 h-5" />
+          </NavLink>
+        </div>
+      )}
 
       <div className="flex items-center gap-4">
         {/* notifications icons  */}

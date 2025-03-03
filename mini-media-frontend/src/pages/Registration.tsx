@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import toast, { Toaster } from "react-hot-toast";
+import { Link, useNavigate } from "react-router-dom";
 import { registerUser } from "../api/auth";
 
 export default function Registration() {
@@ -11,6 +12,7 @@ export default function Registration() {
   });
   // Access the client
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   // Registration Mutations
   const mutation = useMutation({
@@ -21,16 +23,38 @@ export default function Registration() {
     },
   });
 
-  const handleRegistration = () => {
-    mutation.mutate(userData);
+  const handleRegistration = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!userData?.email) {
+      toast.error("Please enter your email before logging in.");
+      return;
+    }
+    mutation.mutate(userData, {
+      onSuccess: () => {
+        // Redirect to login page
+        navigate("/login");
+        toast.success("Registration successful! Please login.");
+      },
+      onError: (data: any) => {
+        // Show error message
+        toast.error(
+          data?.response?.data?.message ??
+            "Registration failed. Please try again."
+        );
+      },
+    });
   };
 
   return (
     <div className="flex justify-center items-center h-screen">
-      <div className="max-w-[500px] w-full flex flex-col gap-3">
+      <form
+        onSubmit={handleRegistration}
+        className="max-w-[500px] w-full flex flex-col gap-3"
+      >
         <h1 className="text-center font-semibold text-xl">Registration</h1>
         <input
           type="text"
+          required
           placeholder="Enter your username"
           value={userData?.username}
           className="border p-2 rounded-md outline-none"
@@ -43,6 +67,7 @@ export default function Registration() {
         />
         <input
           type="email"
+          required
           placeholder="Enter your email"
           value={userData?.email}
           className="border p-2 rounded-md outline-none"
@@ -54,6 +79,7 @@ export default function Registration() {
           }
         />
         <input
+          required
           type="password"
           placeholder="Enter your password"
           value={userData?.password}
@@ -66,10 +92,13 @@ export default function Registration() {
           }
         />
         <button
-          onClick={handleRegistration}
-          className="py-1 px-2 rounded bg-green-700 text-white hover:bg-green-800 duration-150"
+          type="submit"
+          disabled={mutation?.isPending}
+          className={`py-1 px-2 rounded bg-green-700 text-white hover:bg-green-800 duration-150 ${
+            mutation?.isPending ? "bg-gray-500 cursor-not-allowed" : ""
+          }`}
         >
-          Registration
+          {mutation?.isPending ? "Loading..." : "Registration"}
         </button>{" "}
         <span>
           Already have an account?{" "}
@@ -77,7 +106,8 @@ export default function Registration() {
             login
           </Link>
         </span>
-      </div>
+      </form>
+      <Toaster />
     </div>
   );
 }

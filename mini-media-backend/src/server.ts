@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import { Server as SocketIOServer } from "socket.io";
 import app from "./app";
 import config from "./app/config";
-import { User } from "./app/modules/auth/auth.models";
+import conversationModel from "./app/modules/conversation/conversation.model";
 import { MessageModel } from "./app/modules/messages/messages.models";
 
 let server: Server;
@@ -44,15 +44,34 @@ const main = async () => {
       socket.on("registerUser", async (userId: string) => {
         console.log("🔹 Registering user:", userId, socket.id);
         userList[userId] = socket.id;
-        const userInfo = await User.findById(userId).select("friends").lean();
+        const conversations = await conversationModel.find({
+          participants: userId,
+        });
+
+        // Extract other participants from each conversation
+        const chatList = conversations.map((convo) => {
+          const otherParticipant = convo.participants.find(
+            (participant: any) => participant._id.toString() !== userId
+          );
+          return {
+            _id: convo._id, // Conversation ID
+            user: otherParticipant, // Other participant info
+            lastMessage: convo.lastMessage || null,
+            updatedAt: convo.updatedAt,
+          };
+        });
+
         // Notify only the user's friends that they are online
-        if (userInfo && userInfo?.friends?.length > 0) {
+        if (chatList?.length > 0) {
           let onlineFriends: string[] = [];
-          userInfo?.friends?.forEach((friendId) => {
-            const friendSocketId = userList[friendId.toString()];
-            if (friendSocketId) {
-              onlineFriends.push(friendId.toString());
-              io.to(userList[friendId.toString()]).emit("userOnline", userId);
+          chatList?.forEach((conversation) => {
+            const conversationId = conversation?.user?.toString();
+            const friendSocketId = conversationId
+              ? userList[conversationId]
+              : undefined;
+            if (friendSocketId && conversationId) {
+              onlineFriends.push(conversationId);
+              io.to(userList[conversationId]).emit("userOnline", userId);
             }
           });
 
@@ -66,11 +85,36 @@ const main = async () => {
         const newMessage = new MessageModel({ senderId, receiverId, content });
         await newMessage.save();
 
+        // save message to conversation
+        await conversationModel.findOneAndUpdate(
+          {
+            participants: { $all: [senderId, receiverId] },
+          },
+          {
+            lastMessage: {
+              sender: senderId,
+              message: content,
+              timestamp: Date.now(),
+            },
+          }
+        );
+
         // socket ID to send latest messages.
         const receiverSocketId = userList[receiverId];
         if (receiverSocketId) {
           io.to(receiverSocketId).emit("receiveMessage", newMessage);
+          socket.to(userList[senderId]).emit("userStoppedTyping", { senderId });
         }
+      });
+
+      socket.on("typing", ({ conversationId, senderId }) => {
+        socket.to(userList[conversationId]).emit("userTyping", { senderId });
+      });
+
+      socket.on("stopTyping", ({ conversationId, senderId }) => {
+        socket
+          .to(userList[conversationId])
+          .emit("userStoppedTyping", { senderId });
       });
 
       // when disconnect an user

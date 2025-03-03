@@ -4,14 +4,21 @@ import {
   cancelOutgoingFriendRequest,
   declineFriendRequest,
   fetchFriendRequest,
+  getUserFriendList,
   makeFriendApi,
   unfriendAnUser,
 } from "../api/auth";
 import useAuth from "../hooks/useAuth";
 
 export default function FriendRequests() {
-  const { user, userId } = useAuth();
+  const { userId } = useAuth();
   const queryClient = useQueryClient();
+
+  const { data: friendList } = useQuery({
+    queryKey: ["friendList", userId],
+    queryFn: () => getUserFriendList(userId),
+    enabled: !!userId,
+  });
 
   // Make friend mutation
   const makeFriendMutation = useMutation({
@@ -54,17 +61,13 @@ export default function FriendRequests() {
         {
           onSuccess: () => {
             // Added this user to the friend list
-            queryClient.setQueryData(["user"], (userInfo: any) => {
-              if (!userInfo) return userInfo;
-
-              return {
-                ...userInfo,
-                friends: [
-                  ...userInfo?.friends,
-                  { _id: sender._id, username: sender.username },
-                ],
-              };
-            });
+            queryClient.setQueryData(
+              ["friendList", userId],
+              (friendLists: any) => {
+                if (friendLists?.length === 0) return [];
+                return [...friendLists, sender];
+              }
+            );
 
             // Remove user from the friend request
             queryClient.setQueryData(
@@ -187,12 +190,12 @@ export default function FriendRequests() {
   return (
     <div className="p-10">
       {/* My Friends  */}
-      {user?.friends?.length > 0 && (
+      {friendList?.length > 0 && (
         <>
           <h1 className="text-[25px] font-bold mb-5 mt-5">Friends</h1>
           <div className="flex items-center ">
             <div className="max-w-[500px] w-full">
-              {user?.friends?.map((user: any) => (
+              {friendList?.map((user: any) => (
                 <div key={user?._id} className="w-full flex items-center">
                   <div className="w-full flex items-center p-2 gap-2">
                     <div className="w-[60px] h-[60px] overflow-hidden">

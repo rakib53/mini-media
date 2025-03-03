@@ -11,7 +11,14 @@ export default function PrivateRoute({ children }: { children: ReactNode }) {
     navigate("/login");
     return null;
   }
-  if (isLoading) return <p>Loading user data...</p>;
+
+  if (isLoading)
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="loader"></div>
+      </div>
+    );
+
   if (isError) return <p>Error: {(error as Error).message}</p>;
 
   if (userId) return children;

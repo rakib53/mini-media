@@ -1,6 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import { io, userList } from "../../../server";
 import { User } from "../auth/auth.models";
+import conversationModel from "../conversation/conversation.model";
+import Friendship from "../friends/friends.model";
 import Notification from "../notifications/notification.models";
 import { FriendRequest } from "./friendRequest.model";
 
@@ -131,26 +133,46 @@ export const makeFriend = async (
       res.status(404).json({ message: "User not found." });
       return;
     }
+    // Prevent self-friending
+    if (sender === receiver) {
+      res.status(400).json({ message: "You cannot add yourself." });
+      return;
+    }
 
-    // Add each user to the other's friends list
-    await User.findByIdAndUpdate(receiver, {
-      $addToSet: { friends: sender }, // Prevents duplicates
+    const existingFriendship = await Friendship.findOne({
+      $or: [
+        { user1: sender, user2: receiver },
+        { user1: receiver, user2: sender },
+      ],
     });
 
-    await User.findByIdAndUpdate(sender, {
-      $addToSet: { friends: receiver }, // Mutual friendship
+    if (existingFriendship) {
+      res.status(400).json({ message: "Already friends." });
+      return;
+    }
+
+    const friendship = new Friendship({ user1: sender, user2: receiver });
+    await friendship.save();
+
+    // Check if a conversation already exists between these users
+    const existingConversation = await conversationModel.findOne({
+      participants: { $all: [sender, receiver] },
     });
 
-    // Remove friend request after acceptance
-    await FriendRequest.findOneAndDelete({
-      sender: sender,
-      receiver: receiver,
-    });
+    if (!existingConversation) {
+      // Create new conversation
+      const newConversation = new conversationModel({
+        participants: [sender, receiver],
+      });
 
-    res.status(200).json({ message: "Friend request accepted successfully." });
-    return;
+      await newConversation.save();
+    }
+
+    await FriendRequest.findOneAndDelete({ sender, receiver });
+
+    res.status(201).json({ message: "Friend added successfully." });
   } catch (error) {
-    next(error);
+    res.status(500).json({ message: "Server error", error });
   }
 };
 

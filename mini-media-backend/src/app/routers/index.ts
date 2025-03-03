@@ -1,6 +1,8 @@
 import express from "express";
 import { authRoutes } from "../modules/auth/auth.routes";
+import { conversationRoutes } from "../modules/conversation/conversation.routes";
 import { friendRequestRoutes } from "../modules/friendRequest/friendRequest.routes";
+import { friendsRoutes } from "../modules/friends/friends.routes";
 import { messagesRoutes } from "../modules/messages/messages.routes";
 import { notificationRoutes } from "../modules/notifications/notification.routes";
 
@@ -21,7 +23,15 @@ const moduleRoutes = [
   },
   {
     path: "/",
+    route: friendsRoutes,
+  },
+  {
+    path: "/",
     route: messagesRoutes,
+  },
+  {
+    path: "/",
+    route: conversationRoutes,
   },
 ];
 

@@ -124,3 +124,23 @@ export const getAllUsers = async (
     next(error);
   }
 };
+
+export const searchUsers = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { query } = req.params;
+    const users = await User.find({
+      username: { $regex: query, $options: "i" },
+    }).select("-password");
+
+    res.status(200).json({
+      message: "Users retrieved successfully.",
+      users,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

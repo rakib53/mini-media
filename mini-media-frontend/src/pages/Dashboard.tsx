@@ -3,6 +3,7 @@ import { Toaster } from "react-hot-toast";
 import {
   fetchFriendRequest,
   getAllUsers,
+  getUserFriendList,
   sendFriendRequestApi,
   sendNotification,
 } from "../api/auth";
@@ -15,7 +16,7 @@ export default function Dashboard() {
   const queryClient = useQueryClient();
 
   const { data: friendRequests } = useQuery({
-    queryKey: ["friendRequest"],
+    queryKey: ["friendRequest", userId],
     queryFn: () => fetchFriendRequest(userId),
     enabled: !!userId,
   });
@@ -23,6 +24,12 @@ export default function Dashboard() {
   const { data: allUsers } = useQuery({
     queryKey: ["users", userId],
     queryFn: () => getAllUsers(),
+    enabled: !!userId,
+  });
+
+  const { data: friendList } = useQuery({
+    queryKey: ["friendList", userId],
+    queryFn: () => getUserFriendList(userId),
     enabled: !!userId,
   });
 
@@ -57,6 +64,7 @@ export default function Dashboard() {
     sendFriendRequestMutation.mutate(data, {
       onSuccess: async () => {
         queryClient.setQueryData(["friendRequest", userId], (oldData: any) => {
+          console.log("oldData", oldData);
           if (!oldData) {
             return { incomingRequests: [], outgoingRequests: [] };
           }
@@ -71,21 +79,26 @@ export default function Dashboard() {
               email: userInfo?.email,
             },
           };
-
+          console.log("second");
           return {
             ...oldData,
             outgoingRequests: [...oldData.outgoingRequests, newReceiver], // New array reference
           };
         });
-
-        // Force UI update by invalidating the query
-        queryClient.invalidateQueries({ queryKey: ["friendRequest", userId] });
       },
     });
   };
 
-  const userWithoutMySelf =
-    allUsers?.users?.filter((user: User) => user?._id !== userId) || [];
+  const filteredUser =
+    allUsers?.users?.filter((user: User) => {
+      return (
+        user._id !== userId &&
+        !friendList?.some((friend: any) => friend._id === user._id) &&
+        !friendRequests?.incomingRequests?.some(
+          (friend: any) => friend?.sender?._id === user._id
+        )
+      );
+    }) || [];
 
   return (
     <div className="p-8">
@@ -94,12 +107,9 @@ export default function Dashboard() {
       {/* user list  */}
       <h1 className="text-[25px] font-bold mb-10">User List</h1>
       <div className="flex items-center">
-        <div className="grid sm:grid-cols-6 grid-cols-2 gap-5 gap-y-16">
-          {userWithoutMySelf.map((user: User) => (
-            <div
-              key={user?._id}
-              className="max-w-[200px] w-[200px] flex flex-col"
-            >
+        <div className="w-full grid items-stretch grid-cols-[repeat(auto-fit,minmax(250px,1fr))] sm:grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-5 gap-y-16">
+          {filteredUser.map((user: User) => (
+            <div key={user?._id} className="w-full flex flex-col">
               <div className="p-2">
                 <img
                   src=""

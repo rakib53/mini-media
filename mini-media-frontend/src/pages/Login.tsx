@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import { loginUser } from "../api/auth";
 import { useUserProvider } from "../Context/UserContext";
@@ -11,17 +12,17 @@ export default function Login() {
   });
   const { setUserId } = useUserProvider();
   const navigate = useNavigate();
-  // Access the client
   const queryClient = useQueryClient();
 
-  // Login Mutations
+  // Login Mutation
   const mutation = useMutation({
     mutationFn: loginUser,
   });
 
-  const handleLogin = () => {
+  const handleLogin = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     if (!userData?.email) {
-      alert("Please set an user ID before login.");
+      toast.error("Please enter your email before logging in.");
       return;
     }
     mutation.mutate(userData, {
@@ -30,15 +31,25 @@ export default function Login() {
           localStorage.setItem("token", data?.token);
           setUserId(data?._id);
           queryClient.invalidateQueries({ queryKey: ["user", userData.email] });
+          toast.success("Logged in successfully!");
           navigate("/");
         }
+      },
+      onError: (data: any) => {
+        toast.error(
+          data?.response?.data?.message ?? "Login failed. Please try again."
+        );
       },
     });
   };
 
   return (
     <div className="flex justify-center items-center h-screen">
-      <div className="max-w-[500px] w-full flex flex-col gap-3">
+      <Toaster />
+      <form
+        onSubmit={handleLogin}
+        className="max-w-[500px] w-full flex flex-col gap-3"
+      >
         <h1 className="text-center font-semibold text-xl">
           Login to dashboard
         </h1>
@@ -47,6 +58,7 @@ export default function Login() {
           placeholder="Enter your email"
           value={userData?.email}
           className="border p-2 rounded-md outline-none"
+          disabled={mutation.isPending}
           onChange={(e) =>
             setUserData({
               ...userData,
@@ -59,6 +71,7 @@ export default function Login() {
           placeholder="Enter your password"
           value={userData?.password}
           className="border p-2 rounded-md outline-none"
+          disabled={mutation.isPending}
           onChange={(e) =>
             setUserData({
               ...userData,
@@ -67,10 +80,15 @@ export default function Login() {
           }
         />
         <button
-          onClick={handleLogin}
-          className="py-1 px-2 rounded bg-green-700 text-white hover:bg-green-800 duration-150"
+          type="submit"
+          disabled={mutation.isPending}
+          className={`py-1 px-2 rounded text-white duration-150 ${
+            mutation.isPending
+              ? "bg-gray-500 cursor-not-allowed"
+              : "bg-green-700 hover:bg-green-800"
+          }`}
         >
-          Login
+          {mutation.isPending ? "Logging in..." : "Login"}
         </button>
         <span>
           Don't have an account?{" "}
@@ -78,7 +96,7 @@ export default function Login() {
             create one
           </Link>
         </span>
-      </div>
+      </form>
     </div>
   );
 }

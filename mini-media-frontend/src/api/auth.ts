@@ -7,7 +7,10 @@ export interface sendNotificationProps {
 }
 
 // base API URL
-const API_URL = "https://mini-media-3s6a.onrender.com/api";
+// const API_URL = "https://mini-media-3s6a.onrender.com/api";
+
+// base API URL
+const API_URL = "http://localhost:5000/api";
 
 // get register api
 export const registerUser = async (userData: {
@@ -165,7 +168,7 @@ export const unfriendAnUser = async ({
 }) => {
   const token = localStorage.getItem("token");
   const response = await axios.post(
-    `${API_URL}/unfriend`,
+    `${API_URL}/unfriend/${userId}`,
     { userId, friendId },
     {
       headers: {
@@ -204,5 +207,57 @@ export const getSingleConversationMessages = async ({
       },
     }
   );
+  return response.data;
+};
+
+// add a conversation
+export const addConversation = async ({
+  senderId,
+  receiverId,
+}: {
+  senderId: string;
+  receiverId: string;
+}) => {
+  const token = localStorage.getItem("token");
+  const response = await axios.post(
+    `${API_URL}/add-conversation`,
+    { senderId, receiverId },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  return response.data;
+};
+
+// search an user
+export const searchUser = async (search: string) => {
+  const token = localStorage.getItem("token");
+  const response = await axios.get(`${API_URL}/search-users/${search}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return response.data;
+};
+
+export const getCurrentUserConversations = async (userId: string) => {
+  const token = localStorage.getItem("token");
+  const response = await axios.get(`${API_URL}/get-conversations/${userId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return response.data;
+};
+
+export const getUserFriendList = async (userId: string) => {
+  const token = localStorage.getItem("token");
+  const response = await axios.get(`${API_URL}/get-friends/${userId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
   return response.data;
 };
