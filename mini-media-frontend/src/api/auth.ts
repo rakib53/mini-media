@@ -7,10 +7,10 @@ export interface sendNotificationProps {
 }
 
 // base API URL
-// const API_URL = "https://mini-media-3s6a.onrender.com/api";
+const API_URL = "https://mini-media-3s6a.onrender.com/api";
 
-// base API URL
-const API_URL = "http://localhost:5000/api";
+// // base API URL
+// const API_URL = "http://localhost:5000/api";
 
 // get register api
 export const registerUser = async (userData: {

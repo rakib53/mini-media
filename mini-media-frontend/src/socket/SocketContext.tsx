@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import useAuth from "../hooks/useAuth";
 
-const SOCKET_URL = "http://localhost:5000";
+const SOCKET_URL = "https://mini-media-3s6a.onrender.com";
 
 interface SocketContextType {
   socket: Socket | null;
